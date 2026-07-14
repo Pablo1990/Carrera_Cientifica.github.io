@@ -172,11 +172,15 @@ function renderStats() {
   statsEl.textContent = `Edad: ${state.age} · Prestigio: ${state.prestige} · Bienestar: ${state.wellbeing} · Ahorros: ${state.savings} · Papers: ${state.papers} · Hallazgos: ${state.discoveries}`;
 }
 
+function hasMetNobelRequirements() {
+  return state.prestige >= NOBEL_REQUIREMENTS.prestige && state.papers >= NOBEL_REQUIREMENTS.papers && state.discoveries >= NOBEL_REQUIREMENTS.discoveries && state.wellbeing >= NOBEL_REQUIREMENTS.wellbeing;
+}
+
 function finishGame() {
   optionsEl.innerHTML = '';
   questionTitleEl.textContent = 'Final de partida';
 
-  const wonNobel = state.prestige >= NOBEL_REQUIREMENTS.prestige && state.papers >= NOBEL_REQUIREMENTS.papers && state.discoveries >= NOBEL_REQUIREMENTS.discoveries && state.wellbeing >= NOBEL_REQUIREMENTS.wellbeing;
+  const wonNobel = hasMetNobelRequirements();
 
   if (wonNobel) {
     questionEl.textContent = '¡Ganaste el Nobel! Llegaste lejos combinando rigor, decisiones difíciles y algo de suerte.';
@@ -206,6 +210,9 @@ function renderQuestion() {
     button.type = 'button';
     button.textContent = option.label;
     button.addEventListener('click', () => {
+      optionsEl.querySelectorAll('button').forEach((optionButton) => {
+        optionButton.disabled = true;
+      });
       const roll = rollDie();
       applyImpact(option.impact, roll);
       resultEl.textContent = `${dieText(roll)} Decidiste: "${option.label}"`;
