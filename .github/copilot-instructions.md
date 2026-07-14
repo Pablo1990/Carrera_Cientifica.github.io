@@ -102,5 +102,5 @@ Pushing to `main` triggers `.github/workflows/deploy.yml`, which publishes the e
 
 ## Known issues and workarounds
 
-- `randomInt` requires `crypto.getRandomValues`, which is available in browsers and in Node.js ≥ 19 (or ≥ 15 with the Web Crypto API). Vitest runs in Node, which provides `globalThis.crypto` automatically; no polyfill is needed.
+- `randomInt` requires `crypto.getRandomValues`, which is available in all modern browsers and in Node.js ≥ 15. Vitest runs in Node, which provides `globalThis.crypto` automatically; no polyfill is needed.
 - The `deploy.yml` workflow uploads the entire repo root as a Pages artifact, so any file added to the root will be publicly served. Keep sensitive content out of the repo root.
