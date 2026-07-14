@@ -9,8 +9,9 @@ const restartBtn = document.getElementById('restart-btn');
 
 const genders = ['mujer', 'hombre', 'persona no binaria'];
 const genderDescriptors = { mujer: 'una mujer', hombre: 'un hombre', 'persona no binaria': 'una persona no binaria' };
-const DIE_FACTORS = [0.45, 0.75, 1, 1.15, 1.35, 1.65];
+const DIE_FACTOR_BY_ROLL = { 1: 0.45, 2: 0.75, 3: 1, 4: 1.15, 5: 1.35, 6: 1.65 };
 const MIN_SAVINGS = -10;
+const NOBEL_REQUIREMENTS = { prestige: 70, papers: 6, discoveries: 2, wellbeing: 20 };
 
 const cryptoApi = globalThis.crypto;
 
@@ -143,7 +144,7 @@ function rollDie() {
 }
 
 function dieFactor(roll) {
-  return DIE_FACTORS[roll - 1];
+  return DIE_FACTOR_BY_ROLL[roll];
 }
 
 function dieText(roll) {
@@ -175,7 +176,7 @@ function finishGame() {
   optionsEl.innerHTML = '';
   questionTitleEl.textContent = 'Final de partida';
 
-  const wonNobel = state.prestige >= 70 && state.papers >= 6 && state.discoveries >= 2 && state.wellbeing >= 20;
+  const wonNobel = state.prestige >= NOBEL_REQUIREMENTS.prestige && state.papers >= NOBEL_REQUIREMENTS.papers && state.discoveries >= NOBEL_REQUIREMENTS.discoveries && state.wellbeing >= NOBEL_REQUIREMENTS.wellbeing;
 
   if (wonNobel) {
     questionEl.textContent = '¡Ganaste el Nobel! Llegaste lejos combinando rigor, decisiones difíciles y algo de suerte.';
