@@ -8,8 +8,13 @@
   </head>
   <body>
     <main class="app">
-      <h1>Carrera Científica: Camino al Nobel</h1>
-      <p class="subtitle">Un juego rápido para entender lo bonito y lo duro de la ciencia.</p>
+      <div class="lang-switcher">
+        <button id="lang-es" type="button" class="lang-btn active" aria-pressed="true">ES</button>
+        <button id="lang-en" type="button" class="lang-btn" aria-pressed="false">EN</button>
+      </div>
+
+      <h1 id="game-title">Carrera Científica: Camino al Nobel</h1>
+      <p class="subtitle" id="subtitle">Un juego rápido para entender lo bonito y lo duro de la ciencia.</p>
 
       <section class="panel" aria-live="polite">
         <h2 id="character-title">Tu personaje</h2>
@@ -24,7 +29,7 @@
       </section>
 
       <section class="panel" aria-live="polite">
-        <h2>Resultado</h2>
+        <h2 id="result-title">Resultado</h2>
         <p id="result">Aquí verás qué pasó con tu decisión.</p>
       </section>
 

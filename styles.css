@@ -71,6 +71,30 @@ button:disabled {
   gap: 0.6rem;
 }
 
+.lang-switcher {
+  display: flex;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.lang-btn {
+  padding: 0.2rem 0.65rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  color: #bcd6f3;
+  cursor: pointer;
+}
+
+.lang-btn.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #eaf4ff;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
 @media (max-width: 600px) {
   .actions {
     flex-direction: column;
@@ -78,5 +102,9 @@ button:disabled {
 
   button {
     width: 100%;
+  }
+
+  .lang-btn {
+    width: auto;
   }
 }
