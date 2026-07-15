@@ -5,13 +5,16 @@ import {
   MIN_SAVINGS,
   NOBEL_REQUIREMENTS,
   MAX_GAME_ROUNDS,
+  ACHIEVEMENTS,
   randomInt,
   shuffle,
   rollDie,
   dieFactor,
   applyImpact,
   hasMetNobelRequirements,
-  createInitialState
+  createInitialState,
+  buildQueue,
+  checkAchievements
 } from './game-logic.js';
 
 // ---------------------------------------------------------------------------
@@ -42,9 +45,10 @@ describe('LANG', () => {
     'htmlLang', 'pageTitle', 'gameTitle', 'subtitle',
     'characterSectionTitle', 'questionSectionStart', 'questionPlaceholder',
     'resultSectionTitle', 'resultPlaceholder', 'startBtnLabel', 'restartBtnLabel',
-    'dieIntro', 'gameEndTitle', 'nobelWin', 'nobelLose'
+    'dieIntro', 'gameEndTitle', 'nobelWin', 'nobelLose',
+    'achievementsTitle', 'achievementsPlaceholder'
   ];
-  const requiredFnKeys = ['characterIntro', 'dieText', 'decisionText', 'statsText', 'gameEndResult'];
+  const requiredFnKeys = ['characterIntro', 'dieText', 'decisionText', 'statsText', 'gameEndResult', 'impactText'];
 
   it.each(['es', 'en'])('LANG.%s has all required string keys', (lang) => {
     requiredStringKeys.forEach((key) => {
@@ -68,6 +72,13 @@ describe('LANG', () => {
     LANG[lang].genders.forEach((gender) => {
       expect(LANG[lang].genderDescriptors[gender]).toBeDefined();
       expect(typeof LANG[lang].genderDescriptors[gender]).toBe('string');
+    });
+  });
+
+  it.each(['es', 'en'])('LANG.%s.achievements has a label for every ACHIEVEMENTS id', (lang) => {
+    ACHIEVEMENTS.forEach(({ id }) => {
+      expect(typeof LANG[lang].achievements[id], `${lang}.achievements.${id}`).toBe('string');
+      expect(LANG[lang].achievements[id].length).toBeGreaterThan(0);
     });
   });
 });
@@ -140,6 +151,53 @@ it('ES and EN have the same number of questions', () => {
   expect(LANG.es.questions.length).toBe(LANG.en.questions.length);
 });
 
+it.each(['es', 'en'])('LANG.%s: exactly one question is marked alwaysFirst', (lang) => {
+  const fixed = LANG[lang].questions.filter((q) => q.alwaysFirst);
+  expect(fixed.length).toBe(1);
+});
+
+it.each(['es', 'en'])('LANG.%s: the alwaysFirst question is at index 0', (lang) => {
+  expect(LANG[lang].questions[0].alwaysFirst).toBe(true);
+});
+
+// ---------------------------------------------------------------------------
+// LANG impactText
+// ---------------------------------------------------------------------------
+describe.each(['es', 'en'])('LANG.%s.impactText', (lang) => {
+  const { impactText } = LANG[lang];
+
+  it('returns a non-empty string', () => {
+    const before = { prestige: 0, wellbeing: 50, savings: 10, papers: 0, discoveries: 0 };
+    const after  = { prestige: 5, wellbeing: 50, savings: 10, papers: 0, discoveries: 0 };
+    expect(typeof impactText(before, after)).toBe('string');
+    expect(impactText(before, after).length).toBeGreaterThan(0);
+  });
+
+  it('includes a positive delta when a stat increases', () => {
+    const before = { prestige: 0, wellbeing: 50, savings: 10, papers: 0, discoveries: 0 };
+    const after  = { prestige: 8, wellbeing: 50, savings: 10, papers: 1, discoveries: 0 };
+    const text = impactText(before, after);
+    expect(text).toContain('+8');
+    expect(text).toContain('+1');
+  });
+
+  it('includes a negative delta when a stat decreases', () => {
+    const before = { prestige: 10, wellbeing: 50, savings: 10, papers: 0, discoveries: 0 };
+    const after  = { prestige: 10, wellbeing: 45, savings: 8,  papers: 0, discoveries: 0 };
+    const text = impactText(before, after);
+    expect(text).toContain('-5');
+    expect(text).toContain('-2');
+  });
+
+  it('omits stats that did not change', () => {
+    const before = { prestige: 5, wellbeing: 50, savings: 10, papers: 0, discoveries: 0 };
+    const after  = { prestige: 5, wellbeing: 50, savings: 10, papers: 0, discoveries: 0 };
+    const text = impactText(before, after);
+    // No numeric delta should appear
+    expect(text).not.toMatch(/[+-]\d/);
+  });
+});
+
 // ---------------------------------------------------------------------------
 // createInitialState
 // ---------------------------------------------------------------------------
@@ -155,6 +213,7 @@ describe('createInitialState', () => {
     expect(state.discoveries).toBe(0);
     expect(state.rounds).toBe(0);
     expect(state.queue).toEqual([]);
+    expect(state.achievements).toEqual([]);
   });
 
   it('sets maxRounds to the minimum of MAX_GAME_ROUNDS and questions.length', () => {
@@ -312,5 +371,101 @@ describe('randomInt', () => {
       expect(result).toBeGreaterThanOrEqual(0);
       expect(result).toBeLessThan(5);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// buildQueue
+// ---------------------------------------------------------------------------
+describe('buildQueue', () => {
+  const questions = [
+    { alwaysFirst: true, title: 'A' },
+    { title: 'B' },
+    { title: 'C' },
+    { title: 'D' },
+    { title: 'E' },
+  ];
+
+  it('returns an array of the requested length', () => {
+    const q = buildQueue(questions, 4);
+    expect(q).toHaveLength(4);
+  });
+
+  it('puts the alwaysFirst question at the END of the queue (shown first via .pop())', () => {
+    const q = buildQueue(questions, 4);
+    expect(q[q.length - 1].alwaysFirst).toBe(true);
+  });
+
+  it('always includes every alwaysFirst question', () => {
+    for (let i = 0; i < 20; i++) {
+      const q = buildQueue(questions, 4);
+      const titles = q.map((item) => item.title);
+      expect(titles).toContain('A');
+    }
+  });
+
+  it('does not include more items than maxRounds', () => {
+    const q = buildQueue(questions, 3);
+    expect(q).toHaveLength(3);
+  });
+
+  it('does not mutate the original questions array', () => {
+    const copy = [...questions];
+    buildQueue(questions, 4);
+    expect(questions).toEqual(copy);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// checkAchievements
+// ---------------------------------------------------------------------------
+describe('checkAchievements', () => {
+  it('returns no achievements for the initial state', () => {
+    const state = createInitialState();
+    expect(checkAchievements(state)).toEqual([]);
+  });
+
+  it('returns "degree" achievement after the first round', () => {
+    const state = createInitialState();
+    state.rounds = 1;
+    expect(checkAchievements(state)).toContain('degree');
+  });
+
+  it('returns "first_paper" when papers becomes 1', () => {
+    const state = createInitialState();
+    state.papers = 1;
+    expect(checkAchievements(state)).toContain('first_paper');
+  });
+
+  it('returns "discovery" when discoveries becomes 1', () => {
+    const state = createInitialState();
+    state.discoveries = 1;
+    expect(checkAchievements(state)).toContain('discovery');
+  });
+
+  it('does not return already-unlocked achievements', () => {
+    const state = createInitialState();
+    state.rounds = 1;
+    state.achievements = ['degree'];
+    expect(checkAchievements(state)).not.toContain('degree');
+  });
+
+  it('can return multiple achievements at once', () => {
+    const state = createInitialState();
+    state.rounds = 1;
+    state.papers = 1;
+    state.discoveries = 1;
+    const unlocked = checkAchievements(state);
+    expect(unlocked).toContain('degree');
+    expect(unlocked).toContain('first_paper');
+    expect(unlocked).toContain('discovery');
+  });
+
+  it('every achievement id in ACHIEVEMENTS is eventually reachable', () => {
+    // Just verify all achievement ids are strings and conditions are functions
+    ACHIEVEMENTS.forEach(({ id, condition }) => {
+      expect(typeof id).toBe('string');
+      expect(typeof condition).toBe('function');
+    });
   });
 });

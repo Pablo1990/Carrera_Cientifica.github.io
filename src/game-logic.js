@@ -3,6 +3,17 @@ export const MIN_SAVINGS = -10;
 export const NOBEL_REQUIREMENTS = { prestige: 70, papers: 6, discoveries: 2, wellbeing: 20 };
 export const MAX_GAME_ROUNDS = 10;
 
+export const ACHIEVEMENTS = [
+  { id: 'degree',       condition: (s) => s.rounds >= 1 },
+  { id: 'first_paper',  condition: (s) => s.papers >= 1 },
+  { id: 'phd',          condition: (s) => s.prestige >= 20 && s.papers >= 2 },
+  { id: 'ten_papers',   condition: (s) => s.papers >= 10 },
+  { id: 'discovery',    condition: (s) => s.discoveries >= 1 },
+  { id: 'two_discoveries', condition: (s) => s.discoveries >= 2 },
+  { id: 'prestige50',   condition: (s) => s.prestige >= 50 },
+  { id: 'wellbeing80',  condition: (s) => s.wellbeing >= 80 },
+];
+
 export const LANG = {
   es: {
     htmlLang: 'es',
@@ -16,6 +27,18 @@ export const LANG = {
     resultPlaceholder: 'Aquí verás qué pasó con tu decisión.',
     startBtnLabel: 'Comenzar',
     restartBtnLabel: 'Jugar otra vez',
+    achievementsTitle: 'Logros',
+    achievementsPlaceholder: 'Aún no has conseguido ningún logro.',
+    achievements: {
+      degree:          '🎓 ¡Licenciado/a! Elegiste tu carrera universitaria.',
+      first_paper:     '📄 ¡Primer paper publicado!',
+      phd:             '🔬 ¡Doctorado aprobado! Prestigio y papers suficientes.',
+      ten_papers:      '📚 ¡10 papers publicados! Investigador/a prolífico/a.',
+      discovery:       '💡 ¡Primer descubrimiento científico!',
+      two_discoveries: '🌌 ¡Dos descubrimientos! Camino al Nobel.',
+      prestige50:      '⭐ ¡Prestigio 50! Referente en tu campo.',
+      wellbeing80:     '😊 ¡Bienestar 80! Equilibrio vida-ciencia.',
+    },
     genders: ['mujer', 'hombre', 'persona no binaria'],
     genderDescriptors: {
       mujer: 'una mujer',
@@ -31,6 +54,17 @@ export const LANG = {
       return `🎲 Sacaste un ${roll}: ¡salió mejor de lo esperado!`;
     },
     decisionText: (label) => `Decidiste: "${label}"`,
+    impactText: (before, after) => {
+      const deltas = [
+        ['Prestigio',  after.prestige    - before.prestige],
+        ['Bienestar',  after.wellbeing   - before.wellbeing],
+        ['Ahorros',    after.savings     - before.savings],
+        ['Papers',     after.papers      - before.papers],
+        ['Hallazgos',  after.discoveries - before.discoveries],
+      ].filter(([, d]) => d !== 0)
+       .map(([label, d]) => `${label} ${d > 0 ? '+' : ''}${d}`);
+      return deltas.length ? `📊 Cambios: ${deltas.join(' · ')}` : '📊 Sin cambios en estadísticas.';
+    },
     statsText: (s) =>
       `Edad: ${s.age} · Prestigio: ${s.prestige} · Bienestar: ${s.wellbeing} · Ahorros: ${s.savings} · Papers: ${s.papers} · Hallazgos: ${s.discoveries}`,
     gameEndTitle: 'Final de partida',
@@ -40,6 +74,7 @@ export const LANG = {
       `Cierre: terminaste con ${s.papers} papers y ${s.discoveries} descubrimientos. La ciencia es una maratón, no un sprint.`,
     questions: [
       {
+        alwaysFirst: true,
         title: 'Primera gran decisión',
         text: 'Tienes 18 años y toca elegir carrera. ¿Qué te llama más?',
         options: [
@@ -143,6 +178,18 @@ export const LANG = {
     resultPlaceholder: 'Here you will see what happened with your decision.',
     startBtnLabel: 'Start',
     restartBtnLabel: 'Play again',
+    achievementsTitle: 'Achievements',
+    achievementsPlaceholder: 'No achievements unlocked yet.',
+    achievements: {
+      degree:          '🎓 Graduated! You chose your university degree.',
+      first_paper:     '📄 First paper published!',
+      phd:             '🔬 PhD passed! Enough prestige and papers.',
+      ten_papers:      '📚 10 papers published! Prolific researcher.',
+      discovery:       '💡 First scientific discovery!',
+      two_discoveries: '🌌 Two discoveries! On the road to the Nobel.',
+      prestige50:      '⭐ Prestige 50! A reference in your field.',
+      wellbeing80:     '😊 Wellbeing 80! Great work-life balance.',
+    },
     genders: ['woman', 'man', 'non-binary person'],
     genderDescriptors: {
       woman: 'a woman',
@@ -158,6 +205,17 @@ export const LANG = {
       return `🎲 You rolled a ${roll}: it went better than expected!`;
     },
     decisionText: (label) => `You chose: "${label}"`,
+    impactText: (before, after) => {
+      const deltas = [
+        ['Prestige',    after.prestige    - before.prestige],
+        ['Wellbeing',   after.wellbeing   - before.wellbeing],
+        ['Savings',     after.savings     - before.savings],
+        ['Papers',      after.papers      - before.papers],
+        ['Discoveries', after.discoveries - before.discoveries],
+      ].filter(([, d]) => d !== 0)
+       .map(([label, d]) => `${label} ${d > 0 ? '+' : ''}${d}`);
+      return deltas.length ? `📊 Changes: ${deltas.join(' · ')}` : '📊 No stat changes.';
+    },
     statsText: (s) =>
       `Age: ${s.age} · Prestige: ${s.prestige} · Wellbeing: ${s.wellbeing} · Savings: ${s.savings} · Papers: ${s.papers} · Discoveries: ${s.discoveries}`,
     gameEndTitle: 'Game over',
@@ -167,6 +225,7 @@ export const LANG = {
       `Closing: you finished with ${s.papers} papers and ${s.discoveries} discoveries. Science is a marathon, not a sprint.`,
     questions: [
       {
+        alwaysFirst: true,
         title: 'First big decision',
         text: 'You are 18 years old and it is time to choose a degree. What calls to you?',
         options: [
@@ -321,6 +380,22 @@ export function createInitialState() {
     discoveries: 0,
     rounds: 0,
     maxRounds: Math.min(MAX_GAME_ROUNDS, LANG.es.questions.length),
-    queue: []
+    queue: [],
+    achievements: []
   };
+}
+
+export function buildQueue(questions, maxRounds) {
+  const fixed = questions.filter((q) => q.alwaysFirst);
+  const rest = shuffle(questions.filter((q) => !q.alwaysFirst));
+  // Queue is consumed via .pop(), so items at the END are shown FIRST.
+  // Fixed questions go at the end so they appear first in the game.
+  const selected = rest.slice(0, maxRounds - fixed.length);
+  return [...selected, ...fixed];
+}
+
+export function checkAchievements(state) {
+  return ACHIEVEMENTS
+    .filter((a) => !state.achievements.includes(a.id) && a.condition(state))
+    .map((a) => a.id);
 }

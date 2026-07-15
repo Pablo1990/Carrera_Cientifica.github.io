@@ -108,3 +108,27 @@ button:disabled {
     width: auto;
   }
 }
+
+.achievements-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.25rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.achievement-item {
+  background: rgba(61, 183, 255, 0.15);
+  border: 1px solid rgba(61, 183, 255, 0.4);
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.achievements-placeholder {
+  color: #bcd6f3;
+  font-style: italic;
+  font-size: 0.9rem;
+}
