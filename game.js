@@ -95,8 +95,8 @@ function renderQuestion() {
       const t = LANG[currentLang];
       const impactLine = t.impactText(before, state);
       const achievementLines = newAchievements
-        .map((id) => t.achievements[id] ? `🏅 ${t.achievements[id]}` : null)
-        .filter(Boolean)
+        .filter((id) => t.achievements[id])
+        .map((id) => `🏅 ${t.achievements[id]}`)
         .join('\n');
       resultEl.textContent = [
         `${t.dieText(roll)} ${t.decisionText(option.label)}`,

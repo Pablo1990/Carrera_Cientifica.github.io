@@ -21,6 +21,8 @@ function formatDelta(d) {
 
 /**
  * Builds a list of human-readable delta strings for changed stats.
+ * Returns an array so callers can join with a locale-specific separator
+ * or apply further filtering before rendering.
  * @param {Array<[string, string]>} labels - Pairs of [display label, state key].
  * @param {Object} before - Snapshot of stats before the impact.
  * @param {Object} after  - Stats object after the impact.
@@ -402,9 +404,9 @@ export function buildQueue(questions, maxRounds) {
   // Queue is consumed via .pop(), so items at the END are shown FIRST.
   // Fixed questions go at the end so they appear first in the game.
   // Clamp so the total never exceeds maxRounds even if fixed.length >= maxRounds.
-  const fixedSlice = fixed.slice(0, maxRounds);
-  const selected = rest.slice(0, Math.max(0, maxRounds - fixedSlice.length));
-  return [...selected, ...fixedSlice];
+  const fixedToShow = fixed.slice(0, maxRounds);
+  const selected = rest.slice(0, Math.max(0, maxRounds - fixedToShow.length));
+  return [...selected, ...fixedToShow];
 }
 
 export function checkAchievements(state) {

@@ -81,6 +81,14 @@ describe('LANG', () => {
       expect(LANG[lang].achievements[id].length).toBeGreaterThan(0);
     });
   });
+
+  it('ES and EN achievements objects have the same keys, matching all ACHIEVEMENTS ids', () => {
+    const esKeys = Object.keys(LANG.es.achievements).sort();
+    const enKeys = Object.keys(LANG.en.achievements).sort();
+    expect(esKeys).toEqual(enKeys);
+    const achievementIds = ACHIEVEMENTS.map((a) => a.id).sort();
+    expect(esKeys).toEqual(achievementIds);
+  });
 });
 
 // ---------------------------------------------------------------------------
@@ -193,7 +201,7 @@ describe.each(['es', 'en'])('LANG.%s.impactText', (lang) => {
     const before = { prestige: 5, wellbeing: 50, savings: 10, papers: 0, discoveries: 0 };
     const after  = { prestige: 5, wellbeing: 50, savings: 10, papers: 0, discoveries: 0 };
     const text = impactText(before, after);
-    // No numeric delta should appear
+    // Should show a "no changes" message with no numeric deltas
     expect(text).not.toMatch(/[+-]\d/);
   });
 });
