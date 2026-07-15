@@ -5,13 +5,15 @@ import {
   MIN_SAVINGS,
   NOBEL_REQUIREMENTS,
   MAX_GAME_ROUNDS,
+  ENDINGS,
   randomInt,
   shuffle,
   rollDie,
   dieFactor,
   applyImpact,
   hasMetNobelRequirements,
-  createInitialState
+  createInitialState,
+  getEnding
 } from './game-logic.js';
 
 // ---------------------------------------------------------------------------
@@ -42,7 +44,7 @@ describe('LANG', () => {
     'htmlLang', 'pageTitle', 'gameTitle', 'subtitle',
     'characterSectionTitle', 'questionSectionStart', 'questionPlaceholder',
     'resultSectionTitle', 'resultPlaceholder', 'startBtnLabel', 'restartBtnLabel',
-    'dieIntro', 'gameEndTitle', 'nobelWin', 'nobelLose'
+    'dieIntro', 'gameEndTitle', 'nobelWin', 'nobelLose', 'endingCharacterLabel'
   ];
   const requiredFnKeys = ['characterIntro', 'dieText', 'decisionText', 'statsText', 'gameEndResult'];
 
@@ -312,5 +314,212 @@ describe('randomInt', () => {
       expect(result).toBeGreaterThanOrEqual(0);
       expect(result).toBeLessThan(5);
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// ENDINGS structure
+// ---------------------------------------------------------------------------
+describe('ENDINGS', () => {
+  const validTiers = ['high', 'medium-high', 'medium-low', 'low'];
+  const validGenders = ['male', 'female', 'nonbinary', 'any'];
+
+  it('is a non-empty array', () => {
+    expect(Array.isArray(ENDINGS)).toBe(true);
+    expect(ENDINGS.length).toBeGreaterThan(0);
+  });
+
+  it('every entry has required fields with valid values', () => {
+    ENDINGS.forEach((e) => {
+      expect(typeof e.id, `${e.id}.id`).toBe('string');
+      expect(e.id.length, `${e.id} id is non-empty`).toBeGreaterThan(0);
+      expect(validGenders, `${e.id} gender`).toContain(e.gender);
+      expect(validTiers, `${e.id} tier`).toContain(e.tier);
+    });
+  });
+
+  it('every entry has non-empty es and en locale text with name and description', () => {
+    ENDINGS.forEach((e) => {
+      ['es', 'en'].forEach((lang) => {
+        expect(typeof e[lang].name, `${e.id}.${lang}.name`).toBe('string');
+        expect(e[lang].name.length, `${e.id}.${lang}.name non-empty`).toBeGreaterThan(0);
+        expect(typeof e[lang].description, `${e.id}.${lang}.description`).toBe('string');
+        expect(e[lang].description.length, `${e.id}.${lang}.description non-empty`).toBeGreaterThan(0);
+      });
+    });
+  });
+
+  it('ids are unique', () => {
+    const ids = ENDINGS.map((e) => e.id);
+    expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  it('every non-high tier has at least one catch-all ending (no extra threshold beyond tier qualification)', () => {
+    ['low'].forEach((tier) => {
+      const tierEntries = ENDINGS.filter((e) => e.tier === tier);
+      expect(tierEntries.length, `tier ${tier} has entries`).toBeGreaterThan(0);
+      const hasCatchAll = tierEntries.some((e) => e.minPrestige == null && e.maxPrestige == null);
+      expect(hasCatchAll, `tier ${tier} has a catch-all entry`).toBe(true);
+    });
+  });
+
+  it('all four tiers have at least one entry', () => {
+    validTiers.forEach((tier) => {
+      const tierEntries = ENDINGS.filter((e) => e.tier === tier);
+      expect(tierEntries.length, `tier ${tier} has entries`).toBeGreaterThan(0);
+    });
+  });
+
+  it('the last entry is the ultimate catch-all (any gender, no thresholds)', () => {
+    const last = ENDINGS[ENDINGS.length - 1];
+    expect(last.gender).toBe('any');
+    expect(last.tier).toBe('low');
+    expect(last.minPrestige).toBeUndefined();
+    expect(last.maxPrestige).toBeUndefined();
+    expect(last.minPapers).toBeUndefined();
+    expect(last.minSavings).toBeUndefined();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// getEnding
+// ---------------------------------------------------------------------------
+describe('getEnding', () => {
+  function makeState(overrides = {}) {
+    return Object.assign(createInitialState(), overrides);
+  }
+
+  // ── High tier ─────────────────────────────────────────────────────────
+  it('male Nobel winner gets a male high-tier scientist', () => {
+    const state = makeState({
+      gender: 'hombre',
+      prestige: 75, papers: 6, discoveries: 2, wellbeing: 25
+    });
+    const ending = getEnding(state);
+    expect(ending.tier).toBe('high');
+    expect(ending.gender).toBe('male');
+  });
+
+  it('female Nobel winner gets a female high-tier scientist', () => {
+    const state = makeState({
+      gender: 'mujer',
+      prestige: 75, papers: 6, discoveries: 2, wellbeing: 25
+    });
+    const ending = getEnding(state);
+    expect(ending.tier).toBe('high');
+    expect(ending.gender).toBe('female');
+  });
+
+  it('exceptional male winner (prestige >= 105) gets Ramón y Cajal', () => {
+    const state = makeState({
+      gender: 'hombre',
+      prestige: 110, papers: 8, discoveries: 4, wellbeing: 35
+    });
+    expect(getEnding(state).id).toBe('ramon-y-cajal');
+  });
+
+  it('exceptional female winner (prestige >= 90) gets Margarita Salas', () => {
+    const state = makeState({
+      gender: 'mujer',
+      prestige: 92, papers: 8, discoveries: 3, wellbeing: 28
+    });
+    expect(getEnding(state).id).toBe('margarita-salas');
+  });
+
+  it('non-binary Nobel winner falls back to any eligible high-tier ending', () => {
+    const state = makeState({
+      gender: 'persona no binaria',
+      prestige: 75, papers: 6, discoveries: 2, wellbeing: 25
+    });
+    const ending = getEnding(state);
+    expect(ending.tier).toBe('high');
+  });
+
+  // ── Medium-High tier ──────────────────────────────────────────────────
+  it('female medium-high player gets a female medium-high scientist', () => {
+    const state = makeState({
+      gender: 'mujer',
+      prestige: 50, papers: 4, discoveries: 1, wellbeing: 20
+    });
+    const ending = getEnding(state);
+    expect(ending.tier).toBe('medium-high');
+    expect(ending.gender).toBe('female');
+  });
+
+  it('male medium-high player gets a male medium-high scientist', () => {
+    const state = makeState({
+      gender: 'hombre',
+      prestige: 42, papers: 3, wellbeing: 15
+    });
+    const ending = getEnding(state);
+    expect(ending.tier).toBe('medium-high');
+    expect(ending.gender).toBe('male');
+  });
+
+  // ── Medium-Low tier ───────────────────────────────────────────────────
+  it('medium-low male player gets a medium-low male scientist', () => {
+    const state = makeState({
+      gender: 'hombre',
+      prestige: 24, papers: 2
+    });
+    const ending = getEnding(state);
+    expect(ending.tier).toBe('medium-low');
+    expect(ending.gender).toBe('male');
+  });
+
+  it('medium-low female player with modest prestige falls back to any eligible medium-low', () => {
+    const state = makeState({
+      gender: 'mujer',
+      prestige: 16, papers: 1
+    });
+    const ending = getEnding(state);
+    expect(ending.tier).toBe('medium-low');
+  });
+
+  // ── Low tier ──────────────────────────────────────────────────────────
+  it('player with negative prestige gets a fraud-related ending', () => {
+    const state = makeState({ prestige: -3, papers: 1, gender: 'hombre' });
+    const ending = getEnding(state);
+    expect(ending.tier).toBe('low');
+    expect(['dra-moreno', 'dr-alvarez', 'dra-castillo', 'the-fraudster']).toContain(ending.id);
+  });
+
+  it('player with high savings gets happy-in-industry or sellout ending', () => {
+    const state = makeState({ savings: 8, prestige: 3, gender: 'mujer' });
+    const ending = getEnding(state);
+    expect(ending.tier).toBe('low');
+    expect(['happy-in-industry', 'dr-ramirez', 'dra-moreno', 'dra-romero',
+      'bureaucratic-scientist', 'dra-suarez', 'the-forgotten']).toContain(ending.id);
+  });
+
+  it('always returns an ending object with id, tier, gender, es, en properties', () => {
+    const states = [
+      makeState({ gender: 'mujer', prestige: 80, papers: 7, discoveries: 2, wellbeing: 22 }),
+      makeState({ gender: 'hombre', prestige: 45, papers: 4 }),
+      makeState({ gender: 'persona no binaria', prestige: 0 }),
+      makeState({ gender: 'hombre', prestige: -5, papers: 2 })
+    ];
+    states.forEach((state) => {
+      const ending = getEnding(state);
+      expect(typeof ending.id).toBe('string');
+      expect(typeof ending.tier).toBe('string');
+      expect(typeof ending.gender).toBe('string');
+      expect(typeof ending.es.name).toBe('string');
+      expect(typeof ending.en.name).toBe('string');
+    });
+  });
+
+  it('returns the last ENDINGS entry as ultimate fallback for default empty state', () => {
+    // Default state: prestige=0, papers=0, no gender → low tier, no specific match
+    const state = createInitialState();
+    const ending = getEnding(state);
+    expect(ending.tier).toBe('low');
+  });
+
+  it('English gender strings are also recognised', () => {
+    const stateW = makeState({ gender: 'woman', prestige: 75, papers: 6, discoveries: 2, wellbeing: 25 });
+    const stateM = makeState({ gender: 'man', prestige: 75, papers: 6, discoveries: 2, wellbeing: 25 });
+    expect(getEnding(stateW).gender).toBe('female');
+    expect(getEnding(stateM).gender).toBe('male');
   });
 });
