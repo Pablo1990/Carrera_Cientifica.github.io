@@ -51,10 +51,7 @@ describe('LANG', () => {
     'achievementsTitle', 'achievementsPlaceholder',
     'leftAcademiaTitle', 'leftAcademiaMsg', 'burnoutTitle', 'burnoutMsg'
   ];
-  const requiredFnKeys = [
-    'characterIntro', 'dieText', 'decisionText', 'statsText', 'gameEndResult', 'impactText',
-    'leftAcademiaResult', 'burnoutResult'
-  ];
+  const requiredFnKeys = ['characterIntro', 'dieText', 'decisionText', 'statsText', 'gameEndResult', 'impactText', 'leftAcademiaResult', 'burnoutResult'];
 
   it.each(['es', 'en'])('LANG.%s has all required string keys', (lang) => {
     requiredStringKeys.forEach((key) => {

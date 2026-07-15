@@ -107,8 +107,8 @@ export const LANG = {
         title: 'Primera gran decisión',
         text: 'Tienes 18 años. La selectividad ha quedado atrás y llega el momento de elegir tu carrera. ¿Qué camino científico escoges?',
         options: [
-          { label: 'Biología: te fascina el origen de la vida y la célula.', impact: { prestige: 6, wellbeing: 2 } },
-          { label: 'Física: quieres descifrar las leyes del universo.', impact: { prestige: 7 } },
+          { label: 'Biología: te fascina el origen de la vida y la célula.', impact: { prestige: 6, wellbeing: 2, papers: 1 } },
+          { label: 'Física: quieres descifrar las leyes del universo.', impact: { prestige: 7, papers: 1 } },
           { label: 'Ingeniería biomédica: ciencia con impacto real e inmediato.', impact: { prestige: 5, savings: 2 } }
         ]
       },
@@ -271,8 +271,8 @@ export const LANG = {
         title: 'First big decision',
         text: 'You are 18 years old. Exams are behind you and it is time to choose your degree. Which scientific path do you take?',
         options: [
-          { label: 'Biology: you are fascinated by the origin of life and the cell.', impact: { prestige: 6, wellbeing: 2 } },
-          { label: 'Physics: you want to decode the laws of the universe.', impact: { prestige: 7 } },
+          { label: 'Biology: you are fascinated by the origin of life and the cell.', impact: { prestige: 6, wellbeing: 2, papers: 1 } },
+          { label: 'Physics: you want to decode the laws of the universe.', impact: { prestige: 7, papers: 1 } },
           { label: 'Biomedical Engineering: science with immediate real impact.', impact: { prestige: 5, savings: 2 } }
         ]
       },
