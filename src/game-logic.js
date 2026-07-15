@@ -14,7 +14,9 @@ export const ACHIEVEMENTS = [
   { id: 'wellbeing80',  condition: (s) => s.wellbeing >= 80 },
 ];
 
-/** Returns a signed string representation of a numeric delta, e.g. "+5" or "-3". */
+/** Returns a signed string representation of a numeric delta, e.g. "+5" or "-3".
+ *  Callers are expected to filter out zero deltas before invoking this function.
+ */
 function formatDelta(d) {
   return `${d > 0 ? '+' : ''}${d}`;
 }
@@ -403,7 +405,9 @@ export function buildQueue(questions, maxRounds) {
   const rest = shuffle(questions.filter((q) => !q.alwaysFirst));
   // Queue is consumed via .pop(), so items at the END are shown FIRST.
   // Fixed questions go at the end so they appear first in the game.
-  // Clamp so the total never exceeds maxRounds even if fixed.length >= maxRounds.
+  // Clamp fixedToShow in case there are more fixed questions than total rounds,
+  // and use Math.max(0, ...) to prevent a negative slice when all rounds are
+  // consumed by fixed questions.
   const fixedToShow = fixed.slice(0, maxRounds);
   const selected = rest.slice(0, Math.max(0, maxRounds - fixedToShow.length));
   return [...selected, ...fixedToShow];

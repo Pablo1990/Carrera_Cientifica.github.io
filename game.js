@@ -33,15 +33,27 @@ function renderStats() {
   statsEl.textContent = LANG[currentLang].statsText(state);
 }
 
+/**
+ * Returns the translated label strings for the given achievement IDs.
+ * Defensively filters out IDs with no translation (e.g. an achievement
+ * added before the locale object was updated).
+ * @param {string[]} ids - Achievement IDs to look up.
+ * @param {Object} translations - The locale's achievements object.
+ * @returns {string[]} Translated labels for known IDs.
+ */
+function getAchievementLabels(ids, translations) {
+  return ids.filter((id) => translations[id]).map((id) => translations[id]);
+}
+
 function renderAchievements() {
   const t = LANG[currentLang];
   achievementsTitleEl.textContent = t.achievementsTitle;
-  if (state.achievements.length === 0) {
+  const labels = getAchievementLabels(state.achievements, t.achievements);
+  if (labels.length === 0) {
     achievementsListEl.innerHTML = `<li class="achievements-placeholder">${t.achievementsPlaceholder}</li>`;
   } else {
-    achievementsListEl.innerHTML = state.achievements
-      .filter((id) => t.achievements[id])
-      .map((id) => `<li class="achievement-item">${t.achievements[id]}</li>`)
+    achievementsListEl.innerHTML = labels
+      .map((label) => `<li class="achievement-item">${label}</li>`)
       .join('');
   }
   achievementsPanelEl.hidden = false;
@@ -94,9 +106,8 @@ function renderQuestion() {
       newAchievements.forEach((id) => state.achievements.push(id));
       const t = LANG[currentLang];
       const impactLine = t.impactText(before, state);
-      const achievementLines = newAchievements
-        .filter((id) => t.achievements[id])
-        .map((id) => `🏅 ${t.achievements[id]}`)
+      const achievementLines = getAchievementLabels(newAchievements, t.achievements)
+        .map((label) => `🏅 ${label}`)
         .join('\n');
       resultEl.textContent = [
         `${t.dieText(roll)} ${t.decisionText(option.label)}`,
